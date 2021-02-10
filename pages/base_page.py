@@ -1,17 +1,22 @@
-from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.common.exceptions import NoAlertPresentException
 import math
 
+from selenium.webdriver.support.ui import WebDriverWait
+
 
 class BasePage:
-    def __init__(self, browser, url, timeout=100):
+    def __init__(self, browser, url, timeout=10):
         self.browser = browser
         self.url = url
-        self.browser.implicitly_wait(timeout)
+        # self.browser.implicitly_wait(timeout)
 
+    # открытие окон браузера
     def open(self):
         self.browser.get(self.url)
 
+    # проверка наличия элемента на странице
     def is_element_present(self, how, what):
         try:
             self.browser.find_element(how, what)
@@ -19,8 +24,26 @@ class BasePage:
             return False
         return True
 
-    # для проверочного кода в задании
+    # проерка на отсутсвие элемента на странице
+    def is_not_element_present(self, how, what, timeout=4):
+        try:
+            WebDriverWait(self.browser, timeout).until(EC.presence_of_element_located((how, what)))
+        except TimeoutException:
+            return True
 
+        return False
+
+    # проверка на исчзнвения со временем
+    def is_disappeared(self, how, what, timeout=4):
+        try:
+            WebDriverWait(self.browser, timeout, 1, TimeoutException). \
+                until_not(EC.presence_of_element_located((how, what)))
+        except TimeoutException:
+            return False
+
+        return True
+
+    # для проверочного кода в задании
     def solve_quiz_and_get_code(self):
         alert = self.browser.switch_to.alert
         x = alert.text.split(" ")[2]
